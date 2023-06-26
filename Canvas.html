@@ -1,0 +1,235 @@
+<style>
+#canvas{
+	border: 1px solid black;
+}
+.menu{
+	display:flex
+}
+</style>
+<script>
+
+const UNIT = 4;
+const SPACING = 1;
+const rows = 100;
+const columns = 100;
+var widthAll = (UNIT * columns) + (SPACING*columns);
+var heightAll = (UNIT * rows) + (SPACING*rows);
+var grid = new Array(rows);
+var gridChanged = new Array(rows);
+var canvas = null;
+var timer = null;
+
+
+addEventListener("DOMContentLoaded", (event) => {
+	document.getElementById("canvas").width = widthAll
+	document.getElementById("canvas").height = heightAll;
+	canvas = document.getElementById("canvas").getContext("2d");
+	document.getElementById("canvas").addEventListener("mouseup",(event) => {
+		let j = Math.floor(event.offsetX / (UNIT + SPACING));
+		let i = Math.floor(event.offsetY / (UNIT + SPACING));
+		const val = grid[i][j] === 1 ? 0 : 1;
+		gridChanged[i][j] = val !== grid[i][j] ? 1 : 0;
+		grid[i][j] = val;
+		drawAll();
+	});
+	initializeMenuBar();
+	initializeGrid();
+	generatoreAliante();
+	document.getElementById("interval").value = 60;
+	onIntervalChanged();
+});
+
+function tick(){
+	drawAll();
+	evolute();
+}
+function evolute(){
+	var gridLocal = cloneGrid();
+	for(var i=0;i<rows;i++){
+		for(var j=0;j<columns;j++){
+			if (i==3 && j==1)
+				var ci = 0;
+			var vicini = contaVicini(i,j);
+			if (vicini===3)
+			{
+				gridLocal[i][j] = 1;
+				gridChanged[i][j] = grid[i][j]===0 ? 1 : 0;
+				continue;
+			}
+			if (vicini<2 || vicini>3)
+			{
+				gridLocal[i][j] = 0;
+				gridChanged[i][j] = grid[i][j];
+				continue;
+			}
+		}
+	}
+	grid = gridLocal;
+}
+function cloneGrid(){
+	var gridNew = new Array(rows);
+	for(var i=0;i<rows;i++){
+		gridNew[i]=new Array(columns);
+		for(var j=0;j<columns;j++){
+			gridNew[i][j] = grid[i][j];
+		}
+	}
+	return gridNew;
+}
+function contaVicini(i,j){
+	if (i==1 && j==0)
+		var ci = 0;
+	let rst = 0;
+	if(i>0)
+	{
+		if (j>0)
+			rst += grid[i-1][j-1]
+		rst += grid[i-1][j]
+		if(j<columns-1)
+			rst += grid[i-1][j+1]
+	}
+	if(j>0)
+		rst += grid[i][j-1]
+	//rst += grid[i][j]
+	if(j<columns-1)
+		rst += grid[i][j+1]	
+	if(i<rows-1 && j>0)
+		rst += grid[i+1][j-1]
+	if(i<rows-1)
+		rst += grid[i+1][j]
+	if(i<rows-1 && j<columns-1)
+		rst += grid[i+1][j+1]
+	return rst;
+}
+function initializeMenuBar(){
+	canvas.fillStyle = "gray";
+	canvas.fillRect(0,0,widthAll,heightAll);
+}
+function clearGrid(){
+	for(var i=0;i<rows;i++){
+		grid[i]=new Array(columns);
+		gridChanged[i]=new Array(columns);
+		for(var j=0;j<columns;j++){
+			gridChanged[i][j] = grid[i][j]!== 0 ? 1 : 0;
+			grid[i][j] = 0;
+		}
+	}
+}
+function aliante(){
+	var griglie = [grid,gridChanged];
+	griglie.forEach(grid=>{		
+		grid[0][1] = 1;
+		grid[1][2] = 1;
+		grid[2][0] = 1;
+		grid[2][1] = 1;
+		grid[2][2] = 1;
+	});
+	//clearGrid();
+}
+function generatoreAliante(){
+	clearGrid();
+	
+	var griglie = [grid,gridChanged];
+	griglie.forEach(grid=>{
+		grid[5][1] = 1;
+		grid[5][2] = 1;
+		grid[6][1] = 1;
+		grid[6][2] = 1;
+		
+		grid[3][13] = 1;
+		grid[3][14] = 1;
+		grid[4][12] = 1;
+		grid[4][16] = 1;
+		grid[5][11] = 1;
+		grid[5][17] = 1;
+		grid[6][11] = 1;
+		grid[6][15] = 1;
+		grid[6][17] = 1;
+		grid[6][18] = 1;
+		grid[7][11] = 1;
+		grid[7][17] = 1;
+		grid[8][12] = 1;
+		grid[8][16] = 1;
+		grid[9][13] = 1;
+		grid[9][14] = 1;
+		
+		grid[1][25] = 1;
+		grid[2][23] = 1;
+		grid[2][25] = 1;
+		grid[3][21] = 1;
+		grid[3][22] = 1;
+		grid[4][21] = 1;
+		grid[4][22] = 1;
+		grid[5][21] = 1;
+		grid[5][22] = 1;
+		grid[6][23] = 1;
+		grid[6][25] = 1;
+		grid[7][25] = 1;
+		
+		grid[3][35] = 1;
+		grid[3][36] = 1;
+		grid[4][35] = 1;
+		grid[4][36] = 1;
+
+	});
+}
+function initializeGrid(){
+	clearGrid();
+	
+}
+function onIntervalChanged(event){
+	if (timer!=null)
+		clearInterval(timer);
+	var interval = document.getElementById("interval").value;
+	timer = setInterval(tick,interval);
+	document.getElementById("intervalLabel").innerHTML = interval;
+}
+function minus(){
+	document.getElementById("interval").value = +document.getElementById("interval").value - 10
+	onIntervalChanged()
+}
+function plus(){
+	document.getElementById("interval").value = +document.getElementById("interval").value + 10
+	onIntervalChanged()
+}
+function drawAll(){
+	for(var i=0;i<rows;i++){
+		for(var j=0;j<columns;j++){
+			if (gridChanged[i][j]){
+				if(grid[i][j])
+				canvas.fillStyle = "black";
+				else
+					canvas.fillStyle = "white";
+				canvas.fillRect(j*UNIT + (j*SPACING),i*UNIT + (i*SPACING) , UNIT,UNIT);
+				gridChanged[i][j] = 0;
+			} 
+			
+		}
+	}
+}
+function playPause(){
+	if (timer!=null){
+		clearInterval(timer);
+		timer = null;
+		document.getElementById("pause").innerHTML = "Play"
+	} else{
+	var interval = document.getElementById("interval").value;
+		timer = setInterval(tick,interval);
+		document.getElementById("pause").innerHTML = "Pause"
+	}
+}
+</script>
+<body>
+<div class="menu">
+	<button onclick="aliante()">Aliante</button>
+	<button onclick="generatoreAliante()">Generatore</button>
+	<div>
+		<button onclick="minus()">-</button>
+		<input style="display:none" type="number" id="interval" step="10" onchange="onIntervalChanged()"/>
+		<button onclick="plus()">+</button>
+		<label id="intervalLabel"></label>
+		<button id="pause" onclick="playPause()">Pause</button>
+	</div>
+</div>
+<canvas id="canvas"/>
+</body>
